@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#071012">
+  <meta name="description" content="Echo-Sight: survive the Aegis Vanguard facility using a four-mode forensic visor. A first-person 3D psychological puzzle thriller.">
+  <title>ECHO-SIGHT — Aegis Vanguard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/echo-sight.css">
+</head>
+<body>
+  <canvas id="game" aria-label="Echo-Sight first-person game view"></canvas>
+  <canvas id="overlay-canvas" aria-hidden="true"></canvas>
+  <div class="film-grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main id="title-screen" class="screen title-screen">
+    <div class="title-backdrop"></div>
+    <header class="brandbar"><div class="brand"><span class="brand-mark">E</span><span>ECHO<span class="brand-dash">—</span>SIGHT</span></div><span class="build-tag">AEGIS VANGUARD / FIELD TEST 04</span></header>
+    <section class="title-copy">
+      <p class="eyebrow"><i></i> A FIRST-PERSON PSYCHOLOGICAL THRILLER</p>
+      <h1>THE WORLD<br>IS <em>LYING.</em></h1>
+      <p class="title-lede">The facility is blind to you. You are blind to it.<br>Trust the signal. Distrust everything else.</p>
+      <button id="start-button" class="primary-button"><span>BEGIN DESCENT</span><b>↗</b></button>
+      <div class="title-meta"><span>ONE FACILITY</span><span>FOUR WAYS TO SEE</span><span>NO WAY BACK</span></div>
+    </section>
+    <aside class="title-side"><span>01 — 04</span><span class="side-rule"></span><span>AEGIS<br>VANGUARD</span></aside>
+    <div class="title-footer"><span>AN INTERACTIVE THREE-DIMENSIONAL EXPERIENCE</span><button id="controls-open" class="text-button">HOW TO SURVIVE <b>+</b></button></div>
+  </main>
+
+  <section id="controls-modal" class="modal hidden" aria-label="Game controls">
+    <div class="modal-card"><button class="modal-close" data-close="controls-modal" aria-label="Close">×</button><p class="eyebrow"><i></i> FIELD MANUAL / QUICK REFERENCE</p><h2>Learn to <em>listen.</em></h2>
+      <div class="control-grid">
+        <div><kbd>W A S D</kbd><span>Move through the facility</span></div><div><kbd>MOUSE</kbd><span>Look around / aim</span></div>
+        <div><kbd>1 — 5</kbd><span>Switch Echo-Visor mode</span></div><div><kbd>E</kbd><span>Use / interact / collect</span></div>
+        <div><kbd>SHIFT</kbd><span>Sprint (louder footsteps)</span></div><div><kbd>C</kbd><span>Crouch / break the stalker's pursuit</span></div>
+        <div><kbd>ESC</kbd><span>Pause or release the mouse</span></div><div><kbd>CLICK</kbd><span>Focus the game</span></div>
+      </div>
+      <div class="manual-note"><b>FIELD NOTE</b><span>Edge mode reveals the path. Histogram mode repairs the cipher. HOG tracks the Null-Stalker. SIFT anchors a fractured room. Every signal costs battery or sanity.</span></div>
+      <button class="primary-button modal-done" data-close="controls-modal"><span>UNDERSTOOD</span><b>↗</b></button>
+    </div>
+  </section>
+
+  <section id="pause-screen" class="screen pause-screen hidden">
+    <div class="pause-card"><p class="eyebrow"><i></i> FIELD RECORD / SUSPENDED</p><h2>Hold your <em>breath.</em></h2><p>The facility keeps listening, even when you stop.</p><button id="resume-button" class="primary-button"><span>RETURN TO FIELD</span><b>↗</b></button><button id="restart-button" class="text-button">RESTART FROM CHECKPOINT</button></div>
+  </section>
+
+  <section id="end-screen" class="screen end-screen hidden">
+    <div class="end-card"><p class="eyebrow"><i></i> SIGNAL RESTORED / EXTRACTION COMPLETE</p><h2>You made it<br>out <em>alive.</em></h2><p id="ending-summary">Aegis Vanguard is silent. For now.</p><div class="debrief-stats"><span><b id="debrief-time">00:00</b>TIME IN FACILITY</span><span><b id="debrief-cells">0 / 4</b>CRYO-CELLS</span><span><b id="debrief-desync">0</b>DESYNCS</span></div><button id="play-again-button" class="primary-button"><span>RETURN TO THE BEGINNING</span><b>↗</b></button></div>
+  </section>
+
+  <div id="game-ui" class="game-ui hidden" aria-live="polite">
+    <header class="hud-top">
+      <div class="hud-brand"><span class="mini-mark">E</span><span>ECHO-SIGHT</span><small>FIELD OPS / 04</small></div>
+      <div class="zone-readout"><span class="live-dot"></span><span id="zone-name">VESTIBULE</span><small id="zone-depth">DEPTH 001 M</small></div>
+      <button id="pause-button" class="pause-button" aria-label="Pause game">Ⅱ</button>
+    </header>
+
+    <aside class="mission-card">
+      <span class="card-kicker">CURRENT DIRECTIVE <b id="objective-step">01 / 04</b></span>
+      <h2 id="objective-title">Find the resonance console</h2>
+      <p id="objective-copy">Use the Edge lens to separate real geometry from the lie.</p>
+      <div class="objective-progress"><i id="objective-progress-bar"></i></div>
+      <span class="objective-location" id="objective-location">WEST SERVICE CORRIDOR · 18 M</span>
+    </aside>
+
+    <aside class="status-stack">
+      <div class="status-card battery-card"><span class="status-label">VISOR CHARGE <b id="battery-number">100%</b></span><div class="meter"><i id="battery-meter"></i></div><span id="battery-state" class="status-caption">NOMINAL · 04:12 EST.</span></div>
+      <div class="status-card signal-card"><div class="signal-heading"><span class="status-label">SIGNAL INTEGRITY</span><b id="sanity-number">100%</b></div><div class="meter sanity-meter"><i id="sanity-meter"></i></div><span id="signal-state" class="status-caption">NO ACTIVE DESYNC</span></div>
+      <div id="threat-card" class="status-card threat-card"><span class="status-label">ACOUSTIC ANOMALY</span><b id="threat-state">NO RETURN</b><span class="threat-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+    </aside>
+
+    <div class="reticle" aria-hidden="true"><i></i><b></b></div>
+    <div class="focus-label hidden" id="focus-label">SIGNAL TARGET</div>
+    <div class="interact-prompt hidden" id="interact-prompt"><kbd>E</kbd><span id="prompt-copy">INTERACT</span></div>
+    <div class="toast hidden" id="toast"><i></i><span></span></div>
+    <div class="reboot-overlay hidden" id="reboot-overlay"><div class="reboot-mark">E</div><span>VISOR RECALIBRATING</span><b id="reboot-count">10.0</b><div class="reboot-progress"><i id="reboot-progress-bar"></i></div></div>
+
+    <div class="visor-dock">
+      <div class="mode-label"><span>OPTICAL ARRAY</span><b id="mode-drain">LIVE</b></div>
+      <div class="mode-buttons">
+        <button class="mode-button active" data-mode="0" aria-label="Natural vision, key 1"><kbd>1</kbd><span class="mode-icon natural-icon">◉</span><span class="mode-name">NATURAL</span></button>
+        <button class="mode-button" data-mode="1" aria-label="Edge lens, key 2"><kbd>2</kbd><span class="mode-icon edge-icon">⌗</span><span class="mode-name">EDGE</span></button>
+        <button class="mode-button" data-mode="2" aria-label="Histogram lens, key 3"><kbd>3</kbd><span class="mode-icon hist-icon">▥</span><span class="mode-name">HISTO</span></button>
+        <button class="mode-button" data-mode="3" aria-label="HOG tracking lens, key 4"><kbd>4</kbd><span class="mode-icon hog-icon">⌁</span><span class="mode-name">HOG</span></button>
+        <button class="mode-button" data-mode="4" aria-label="SIFT mapping lens, key 5"><kbd>5</kbd><span class="mode-icon sift-icon">✳</span><span class="mode-name">SIFT</span></button>
+      </div>
+      <div class="mode-description" id="mode-description">Unaided spectrum · no battery drain</div>
+    </div>
+
+    <div class="bottom-left"><span id="checkpoint-readout">CHECKPOINT: ENTRY BAY</span><span class="bottom-divider"></span><span>AEGIS VANGUARD / SUBLEVEL 04</span></div>
+    <div class="bottom-right"><span id="clock-readout">00:00</span><span class="bottom-divider"></span><span id="fps-readout">60 HZ</span></div>
+
+    <section id="histogram-panel" class="lens-panel histogram-panel hidden" aria-label="Histogram calibration">
+      <div class="panel-head"><div><span class="panel-overline">LIVE LUMINANCE / CHANNEL 01</span><h3>Recover the <em>cipher.</em></h3></div><button class="panel-close" id="hist-close" aria-label="Close histogram tuning">×</button></div>
+      <canvas id="histogram-graph" width="480" height="104"></canvas>
+      <div class="hist-target"><span>REFERENCE WINDOW</span><div class="target-band"><i></i></div><b>38 / 62 / 46</b></div>
+      <label class="tune-slider"><span>SHADOWS <b id="shadow-val">30</b></span><input id="shadow-slider" type="range" min="0" max="75" value="30"><i class="slider-scale"><b>BLACK</b><b>OPEN</b></i></label>
+      <label class="tune-slider"><span>MIDTONES <b id="mid-val">50</b></span><input id="mid-slider" type="range" min="20" max="85" value="50"><i class="slider-scale"><b>FLAT</b><b>EXPOSE</b></i></label>
+      <label class="tune-slider"><span>HIGHLIGHTS <b id="high-val">70</b></span><input id="high-slider" type="range" min="35" max="100" value="70"><i class="slider-scale"><b>CLIP</b><b>RECOVER</b></i></label>
+      <div class="panel-foot"><span id="calibration-status"><i></i> THREE CHANNELS OUT OF RANGE</span><button id="calibrate-button" class="calibrate-button">NORMALIZE <b>↗</b></button></div>
+    </section>
+
+    <section id="sift-panel" class="lens-panel sift-panel hidden" aria-label="Spatial alignment">
+      <div class="sift-head"><span class="panel-overline">REFERENCE PHOTOGRAPH / 04-B</span><span class="sift-live"><i></i> LIVE MATCH</span></div>
+      <h3>Anchor the <em>fracture.</em></h3>
+      <p>Stand in the marked ring. Turn toward the reference wall until both constellations converge.</p>
+      <div class="alignment-readout"><div class="alignment-value"><b id="alignment-value">00</b><span>%</span></div><div class="alignment-track"><i id="alignment-meter"></i></div></div>
+      <div class="sift-markers" id="sift-markers"><span>●</span><span>✳</span><span>●</span><span>╳</span><span>●</span><span>✳</span><span>●</span><span>╳</span></div>
+      <div class="sift-foot"><span id="alignment-hint">POSITION: SEEKING</span><kbd>E</kbd><span>LOCK WHEN MATCHED</span></div>
+    </section>
+
+    <div id="mobile-controls" class="mobile-controls" aria-label="Touch movement controls">
+      <button data-move="forward" class="touch-key touch-up">▲</button><button data-move="left" class="touch-key touch-left">◀</button><button data-move="back" class="touch-key touch-down">▼</button><button data-move="right" class="touch-key touch-right">▶</button><button id="touch-interact" class="touch-interact">USE</button>
+    </div>
+  </div>
+
+  <script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js"}}</script>
+  <script type="module" src="./src/echo-sight.js"></script>
+</body>
+</html>
